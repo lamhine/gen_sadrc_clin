@@ -1,0 +1,19 @@
+# R project files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Individual-level data (processed from raw data on Box)
+01_data/
+
+# Claude Code local settings and project files
+.claude/
+CLAUDE.md
+
+# OS files
+.DS_Store
+
+# Temporary artifacts
+07_bootstrap_log.txt
+Rplots.pdf

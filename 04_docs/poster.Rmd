@@ -9,23 +9,22 @@ author:
     affil: "1,3"
 affiliation:
   - num: 1
-    address: Department of Epidemiology and Population Health, Stanford University School of Medicine
+    address: Department of Epidemiology and Population Health, Stanford School of Medicine
   - num: 2
-    address: Department of Primary Care and Population Health, Stanford University School of Medicine
+    address: Department of Primary Care and Population Health, Stanford School of Medicine
   - num: 3
-    address: Department of Neurology and Neurological Sciences, Stanford University School of Medicine
-# Poster sizing -- update once guidelines are available
+    address: Department of Neurology and Neurological Sciences, Stanford School of Medicine
 poster_height: "36in"
 poster_width: "48in"
-# Style
-primary_colour: "#8C1515"    # Stanford cardinal
-secondary_colour: "#4D4F53"  # Stanford cool grey
+primary_colour: "#8C1515"
+secondary_colour: "#4D4F53"
 accent_colour: "#B1040E"
 title_textsize: "60pt"
 author_textsize: "36pt"
 affiliation_textsize: "24pt"
 body_textsize: "28pt"
 caption_textsize: "20pt"
+titlebox_height: "9%"
 column_numbers: 3
 output:
   posterdown::posterdown_html:
@@ -39,52 +38,33 @@ knitr::opts_chunk$set(
   echo = FALSE, warning = FALSE, message = FALSE,
   fig.align = "center", out.width = "100%"
 )
-
 library(tidyverse)
 library(knitr)
 library(kableExtra)
-
-# Paths
 results_dir <- "/Users/lamhine/Documents/GitHub/gen_sadrc_clin/03_results"
-
-# Load results
 hybrid     <- readRDS(file.path(results_dir, "12_hybrid_prevalence.rds"))
 pr_pd      <- readRDS(file.path(results_dir, "09_pr_pd_results.rds"))
 aipsw      <- readRDS(file.path(results_dir, "07_aipsw_results.rds"))
-enrichment <- read.csv(file.path(results_dir, "13_enrichment_diagnostics.csv"))
-
-# Color palette (accessible, Stanford-adjacent)
-race_colors <- c(
-  "White NH"  = "#8C1515",  # Stanford cardinal
-  "Hispanic"  = "#E98300",  # warm orange
-  "Asian NH"  = "#007C92",  # teal
-  "NH Other"  = "#53565A"   # grey
-)
+race_colors <- c("White NH" = "#8C1515", "Hispanic" = "#E98300",
+                  "Asian NH" = "#007C92", "NH Other" = "#53565A")
 ```
 
 ```{css, echo=FALSE}
-/* Prevent section headers from orphaning at column breaks */
-h1, h2, h3 {
-  break-after: avoid;
+h1, h2, h3 { break-after: avoid; }
+.poster_title {
+  padding-bottom: 0.2em !important;
+  padding-top: 0.2em !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
-/* Enrichment: bullets left, table right — table vertically centered */
-.enrichment-wrap {
-  display: flex;
-  gap: 0.5em;
-  align-items: center;
-}
-.enrichment-wrap .enrichment-bullets {
-  flex: 1.2;
-  min-width: 0;
-}
-.enrichment-wrap .enrichment-tbl {
-  flex: 0.8;
-  min-width: 0;
-}
-/* Consistent list spacing across all sections */
-.poster_body li {
-  margin-bottom: 0.5em;
-}
+.poster_title h1 { margin-bottom: 0.1em !important; margin-top: 0 !important; }
+.poster_title h3, .poster_title h5 { margin-top: 0.1em !important; margin-bottom: 0.1em !important; }
+.poster_body { padding-top: 0.3em !important; }
+.poster_title h3, .poster_title .author, .poster_title sup { color: white !important; }
+.poster_body p { margin-bottom: 0.3em; }
+.poster_body h1 { margin-bottom: 0.2em; }
+.poster_body h3 { margin-bottom: 0.2em; margin-top: 0.3em; }
+.poster_body li { margin-bottom: 0.5em; }
 ```
 
 # Background
@@ -93,127 +73,74 @@ h1, h2, h3 {
 
 - **National prevalence models often lack estimates for Asian Americans**, a critical gap for the Bay Area where Asian Americans represent a substantial share of the older adult population.
 
-- Alzheimer's Disease Research Centers provide rich clinical data, but enroll a higher proportion of people with cognitive impairment than exists in the general population. This **clinical enrichment** complicates efforts to generalize ADRC findings to the broader community.
+- Alzheimer's Disease Research Centers provide rich clinical data, but enroll a higher proportion of people with cognitive impairment than the general population. This **clinical enrichment** complicates generalization of ADRC findings.
 
-```{r dag, fig.height=2.8, fig.width=6, fig.align='center', out.width="75%"}
-# Selection DAG: X → Y, X → S ← Y
-# S is a collider — conditioning on S=1 (ADRC) distorts the X-Y relationship
-
+```{r dag, fig.height=2.2, fig.width=5, fig.align='center', out.width="65%"}
 dag_nodes <- tibble(
-  label = c(
-    "X\n(Demographics)",
-    "Y\n(Cognitive Status)",
-    "S = 1\n(ADRC Participation)"
-  ),
-  x = c(0, 2, 1),
-  y = c(1, 1, 0)
-)
-
+  label = c("X\n(Demographics)", "Y\n(Cognitive Status)", "S = 1\n(ADRC Enrollment)"),
+  x = c(0, 2, 1), y = c(1, 1, 0))
 dag_edges <- tibble(
-  x = c(0, 0, 2),
-  y = c(1, 1, 1),
-  xend = c(2, 1, 1),
-  yend = c(1, 0, 0),
-  label = c("Causal", "Selection", "Selection\n(enrichment)")
-)
-
+  x = c(0, 0, 2), y = c(1, 1, 1), xend = c(2, 1, 1), yend = c(1, 0, 0),
+  label = c("Causal", "Selection", "Selection\n(enrichment)"))
 ggplot() +
-  # Edges (arrows)
-  geom_segment(data = dag_edges,
-               aes(x = x, y = y, xend = xend, yend = yend),
-               arrow = arrow(length = unit(0.15, "inches"), type = "closed"),
-               linewidth = 0.8, color = "#4D4F53") +
-  # Edge labels
+  geom_segment(data = dag_edges, aes(x=x, y=y, xend=xend, yend=yend),
+               arrow = arrow(length=unit(0.12,"inches"), type="closed"),
+               linewidth=0.7, color="#4D4F53") +
   geom_text(data = dag_edges,
-            aes(x = (x + xend)/2 + c(0, -0.22, 0.22),
-                y = (y + yend)/2 + c(0.12, 0, 0),
-                label = label),
-            size = 3.5, color = "#4D4F53", fontface = "italic") +
-  # Nodes
-  geom_point(data = dag_nodes, aes(x = x, y = y),
-             size = 18, shape = 21, fill = "white", color = "#8C1515",
-             stroke = 1.5) +
-  # Node labels
-  geom_text(data = dag_nodes, aes(x = x, y = y, label = label),
-            size = 3.2, fontface = "bold", lineheight = 0.85) +
-  # Box around S to indicate conditioning
-  annotate("rect", xmin = 0.55, xmax = 1.45, ymin = -0.32, ymax = 0.32,
-           fill = NA, color = "#B1040E", linewidth = 1.2, linetype = "dashed") +
-  annotate("text", x = 1, y = -0.42, label = "Conditioned on (observed sample)",
-           size = 2.8, color = "#B1040E", fontface = "italic") +
-  coord_fixed(ratio = 0.7, xlim = c(-0.6, 2.6), ylim = c(-0.55, 1.3)) +
+            aes(x=(x+xend)/2 + c(0,-0.22,0.22), y=(y+yend)/2 + c(0.1,0,0), label=label),
+            size=3, color="#4D4F53", fontface="italic") +
+  geom_point(data = dag_nodes, aes(x=x, y=y), size=16, shape=21,
+             fill="white", color="#8C1515", stroke=1.5) +
+  geom_text(data = dag_nodes, aes(x=x, y=y, label=label),
+            size=2.8, fontface="bold", lineheight=0.85) +
+  annotate("rect", xmin=0.55, xmax=1.45, ymin=-0.28, ymax=0.28,
+           fill=NA, color="#B1040E", linewidth=1, linetype="dashed") +
+  annotate("text", x=1, y=-0.38, label="Conditioned on (observed sample)",
+           size=2.5, color="#B1040E", fontface="italic") +
+  coord_fixed(ratio=0.7, xlim=c(-0.5,2.5), ylim=c(-0.5,1.2)) +
   theme_void()
 ```
 
 ### Research Questions
 
-1. What is the estimated prevalence of AD and ADRD among adults aged 65+ in the Stanford ADRC's three-county catchment area (Alameda, San Mateo, and Santa Clara counties)?
-
-2. After accounting for differences in age, sex, education, and health conditions, are there disparities in cognitive outcomes across racial/ethnic groups?
-
-3. How does the ADRC's clinical enrichment shape its sample, and what does this mean for interpreting ADRC-based findings?
+1. What is the estimated local prevalence of AD/ADRD among adults aged 65+ in the ADRC's three-county catchment area?
+2. Are there disparities in cognitive outcomes across racial/ethnic groups after demographic standardization?
+3. How does clinical enrichment shape the ADRC sample relative to the target population?
 
 # Data & Methods
 
-```{r data-sources-table}
-data_sources <- tibble(
-  Source = c("**Stanford ADRC**", "**California BRFSS**",
-             "**Dhana et al. 2023**", "**Matthews et al. 2019**"),
-  Description = c(
-    "Clinical assessments (NACC UDS v3); 529 adults aged 65+; 2015--2024",
-    "Population-based telephone survey; 2,150 adults aged 65+ in 3 counties; 2015--2024",
-    "Published AD prevalence coefficients from the Chicago Health and Aging Project",
-    "Published ADRD prevalence rates by race, age, and sex from Medicare data"
-  ),
-  Role = c(
-    "Clinical outcomes; local race/ethnicity associations",
-    "Target population demographics",
-    "Base model for AD prevalence estimation",
-    "ADRD prevalence via indirect standardization"
-  )
-)
+- **Data:** Stanford ADRC (529 adults 65+, NACC UDS v3, 2015--2024); California BRFSS (2,150 adults 65+ in Alameda, San Mateo, Santa Clara counties, 2015--2024); published coefficients from Dhana et al. (2023) and Matthews et al. (2019).
 
-kable(data_sources, format = "html", escape = FALSE) %>%
-  kable_styling(font_size = 26, full_width = TRUE,
-                bootstrap_options = c("condensed", "striped")) %>%
-  column_spec(1, bold = TRUE, width = "20%") %>%
-  column_spec(2, width = "45%") %>%
-  column_spec(3, width = "35%")
-```
+- **Q1 -- Local AD Prevalence (Hybrid Model):** Dhana et al. published logistic regression coefficients for AD prevalence with age, sex, education, and race/ethnicity as predictors, but their model lacks an Asian American category. We constructed a hybrid model:
 
-**Question 1 -- Local AD Prevalence (Hybrid Model):** We estimated AD prevalence using the following logistic model applied to individual-level BRFSS data with survey weights:
+$$\text{logit}(P(\text{AD}_i)) = \hat{\alpha}^{D} + \hat{\beta}_{\text{age}}^{D} x_{\text{age}} + \hat{\beta}_{\text{sex}}^{D} x_{\text{sex}} + \hat{\beta}_{\text{edu}}^{D} x_{\text{edu}} + \hat{\beta}_{\text{race}}^{A} x_{\text{race}}$$
 
-$$\text{logit}(P(\text{AD}_i)) = \hat{\alpha}^{D} + \hat{\beta}_{\text{age}}^{D} x_{\text{age},i} + \hat{\beta}_{\text{sex}}^{D} x_{\text{sex},i} + \hat{\beta}_{\text{edu}}^{D} x_{\text{edu},i} + \hat{\beta}_{\text{race}}^{A} x_{\text{race},i}$$
+  where $D$ denotes published CHAP coefficients and $\hat{\beta}_{\text{race}}^{A}$ are log-odds ratios for AD by race/ethnicity (vs. White NH) estimated from the Stanford ADRC. We verified transportability of these ORs using case-control principles by testing for variation in clinical oversampling across groups. The model was applied to individual-level BRFSS data with survey weights. For ADRD, we used Matthews et al. (2019) rates via indirect standardization.
 
-where coefficients marked $D$ are from the Dhana et al. (2023) population-based CHAP cohort and $\hat{\beta}_{\text{race}}^{A}$ (the log-odds ratios for AD comparing each racial/ethnic group to White NH) are estimated from the Stanford ADRC. Using case-control study principles, we verified the transportability of these odds ratios by testing for variation in the degree of clinical oversampling across racial/ethnic groups. White NH serves as the reference group for the race coefficients, so no substitution is needed for that group. For ADRD, we applied published Medicare-based prevalence rates by race, age, and sex (Matthews et al. 2019) to the local demographic distribution via indirect standardization.
+- **Q2 -- Disparities (AIPSW):** We estimated prevalence ratios using augmented inverse probability of selection weighting:
 
-**Question 2 -- Disparities:** We used augmented inverse probability of selection weighting (AIPSW), a statistical reweighting method that adjusts for demographic and health differences between the ADRC and the local population, to estimate prevalence ratios across racial/ethnic groups (1,000 bootstrap replicates $\times$ 40 multiply imputed datasets).
+$$\hat{\theta}_{DR} = \frac{\sum_{i \in T} \hat{\mu}(X_i) \cdot w_i^{T}}{\sum_{i \in T} w_i^{T}} + \frac{\sum_{i \in S} (Y_i - \hat{\mu}(X_i)) \cdot w_i^{S}}{\sum_{i \in S} w_i^{S}}$$
 
-**Question 3 -- Enrichment:** We characterized the ADRC's referral pathways and compared ADRC-derived odds ratios to published population-based estimates.
+  where $T$ = BRFSS target population, $S$ = ADRC source sample, $\hat{\mu}(X)$ = outcome model predictions, $w^T$ = survey weights, and $w^S$ = stabilized inverse odds of selection weights. This doubly robust estimator is consistent if either the participation model or the outcome model is correctly specified (Dahabreh et al. 2019). Variance was estimated via stratified bootstrap (1,000 replicates $\times$ 40 multiply imputed datasets with Rubin's rules).
+
+- **Q3 -- Enrichment:** We characterized ADRC referral pathways and compared ADRC-derived odds ratios to published population-based estimates.
 
 # Results
 
 ### Local AD/ADRD Prevalence
 
-```{r prevalence-plot, fig.height=5.5, fig.width=8}
+```{r prevalence-plot, fig.height=5, fig.width=8}
 prev_race <- hybrid$by_race %>%
   select(race_eth4_h, hybrid_prev) %>%
   rename(race = race_eth4_h, prevalence = hybrid_prev) %>%
-  mutate(
-    type = "AD (hybrid model)",
-    race = factor(race, levels = c("White NH", "Hispanic", "Asian NH", "NH Other"))
-  )
-
+  mutate(type = "AD (hybrid model)",
+         race = factor(race, levels = c("White NH","Hispanic","Asian NH","NH Other")))
 adrd_race <- hybrid$adrd_by_race %>%
   rename(race = race_eth4_h, prevalence = matthews_rate) %>%
   select(race, prevalence) %>%
-  mutate(
-    type = "ADRD (Matthews rates)",
-    race = factor(race, levels = c("White NH", "Hispanic", "Asian NH", "NH Other"))
-  )
-
+  mutate(type = "ADRD (Matthews rates)",
+         race = factor(race, levels = c("White NH","Hispanic","Asian NH","NH Other")))
 prev_data <- bind_rows(prev_race, adrd_race)
-
 ggplot(prev_data, aes(x = race, y = prevalence, fill = race)) +
   geom_col(width = 0.7, show.legend = FALSE) +
   geom_text(aes(label = sprintf("%.1f%%", prevalence)),
@@ -221,109 +148,124 @@ ggplot(prev_data, aes(x = race, y = prevalence, fill = race)) +
   facet_wrap(~type) +
   scale_fill_manual(values = race_colors) +
   scale_y_continuous(limits = c(0, 20), labels = function(x) paste0(x, "%")) +
-  labs(
-    x = NULL, y = "Estimated Prevalence (%)",
-    caption = "AD overall: 8.9% | ADRD overall: 10.5%"
-  ) +
+  labs(x = NULL, y = "Estimated Prevalence (%)",
+       title = "Figure 1. Estimated AD/ADRD prevalence by race/ethnicity",
+       caption = "AD overall: 8.9% | ADRD overall: 10.5%") +
   theme_minimal(base_size = 16) +
-  theme(
-    strip.text = element_text(face = "bold", size = 16),
-    axis.text.x = element_text(size = 13, face = "bold"),
-    plot.caption = element_text(size = 13, face = "italic", hjust = 0.5),
-    panel.grid.major.x = element_blank()
-  )
+  theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        plot.title.position = "plot",
+        strip.text = element_text(face = "bold", size = 16),
+        axis.text.x = element_text(size = 13, face = "bold"),
+        plot.caption = element_text(size = 13, face = "italic", hjust = 0.5),
+        panel.grid.major.x = element_blank())
 ```
-
-Hispanic older adults had the highest estimated AD prevalence (11.6%), while Asian Americans had the lowest (5.3%) -- a finding that national models lacking an Asian category cannot produce.
 
 ### Demographic Disparities
 
-```{r disparity-plot, fig.height=6, fig.width=8}
+```{r disparity-plot, fig.height=5.5, fig.width=8}
 pr_data <- pr_pd %>%
   filter(measure == "Prevalence Ratio") %>%
-  mutate(
-    race = factor(race, levels = c("NH Other", "Asian NH", "Hispanic")),
-    outcome_label = case_when(
-      outcome == "mci_h" ~ "MCI",
-      outcome == "ad_h" ~ "AD",
-      outcome == "adrd_h" ~ "ADRD",
-      TRUE ~ outcome
-    ),
-    outcome_label = factor(outcome_label, levels = c("MCI", "AD", "ADRD"))
-  )
-
+  mutate(race = factor(race, levels = c("NH Other", "Asian NH", "Hispanic")),
+         outcome_label = case_when(outcome=="mci_h"~"MCI", outcome=="ad_h"~"AD",
+                                   outcome=="adrd_h"~"ADRD", TRUE~outcome),
+         outcome_label = factor(outcome_label, levels = c("MCI", "AD", "ADRD")))
 ggplot(pr_data, aes(x = estimate, y = race, color = race)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "grey50") +
   geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2, linewidth = 0.8) +
   geom_point(size = 3.5) +
   facet_wrap(~outcome_label, ncol = 1) +
-  scale_color_manual(values = race_colors[c("NH Other", "Asian NH", "Hispanic")]) +
+  scale_color_manual(values = race_colors[c("NH Other","Asian NH","Hispanic")]) +
   scale_x_continuous(limits = c(0, 4.2), breaks = seq(0, 4, 1)) +
-  labs(
-    x = "Prevalence Ratio (vs. White NH)",
-    y = NULL,
-    caption = "AIPSW estimates with 95% bootstrap CIs. Reference: White NH."
-  ) +
+  labs(x = "Prevalence Ratio (vs. White NH)", y = NULL,
+       title = "Figure 2. AIPSW prevalence ratios by race/ethnicity",
+       caption = "95% bootstrap CIs. Reference group: White NH.") +
   theme_minimal(base_size = 16) +
-  theme(
-    legend.position = "none",
-    strip.text = element_text(face = "bold", size = 16),
-    axis.text.y = element_text(size = 14, face = "bold"),
-    plot.caption = element_text(size = 12, face = "italic", hjust = 0.5)
-  )
+  theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        plot.title.position = "plot",
+        legend.position = "none",
+        strip.text = element_text(face = "bold", size = 16),
+        axis.text.y = element_text(size = 14, face = "bold"),
+        plot.caption = element_text(size = 12, face = "italic", hjust = 0.5))
 ```
-
-Point estimates suggest elevated risk for Hispanic and NH Other groups, but confidence intervals are wide, reflecting modest ADRC subgroup sample sizes.
 
 ### Clinical Enrichment
 
-<div class="enrichment-wrap">
-<div class="enrichment-bullets">
-
-Approximately **52% of ADRC participants** had cognitive impairment at baseline, compared with an estimated 10% in the general 65+ population (Matthews et al. 2019), representing an approximately 5-fold clinical enrichment. This enrichment was present across all referral pathways, including self-referrals (38% impaired). Enrichment ratios were approximately constant across racial/ethnic groups (White NH: 4.8x, Hispanic: 3.8x, Asian NH: 4.5x), supporting the transportability of ADRC-derived race/ethnicity odds ratios to the target population.
-
-</div>
-<div class="enrichment-tbl">
-
-```{r enrichment-table}
-enrich_display <- tibble(
-  `Referral Source` = c(
-    "ADC clinician/staff", "Self-referral",
-    "Registry/research", "Outside physician", "Other"
-  ),
-  `% Sample` = c("41%", "28%", "15%", "5%", "11%"),
-  `% Impaired` = c("69%", "38%", "30%", "69%", "48%")
-)
-
-kable(enrich_display, format = "html", escape = FALSE) %>%
-  kable_styling(font_size = 26, full_width = TRUE,
-                bootstrap_options = c("condensed", "striped")) %>%
-  column_spec(1, bold = TRUE)
+```{r referral-plot, fig.height=3, fig.width=8}
+referral_data <- tibble(
+  source = factor(c("ADC clinician/staff","Self-referral","Registry/research",
+                     "Outside physician","Other"),
+                  levels = rev(c("ADC clinician/staff","Self-referral",
+                                  "Registry/research","Outside physician","Other"))),
+  pct_sample = c(41, 28, 15, 5, 11),
+  pct_impaired = c(69, 38, 30, 69, 48))
+ggplot(referral_data, aes(x = pct_impaired, y = source)) +
+  geom_col(fill = "#8C1515", width = 0.6) +
+  geom_text(aes(label = paste0(pct_impaired, "%")),
+            hjust = -0.3, size = 5, fontface = "bold") +
+  geom_vline(xintercept = 10, linetype = "dashed", color = "#B1040E", linewidth = 1) +
+  annotate("text", x = 10, y = 0.35, label = "Pop. rate (~10%)",
+           size = 3.5, color = "#B1040E", hjust = 0.5, fontface = "bold.italic") +
+  scale_x_continuous(limits = c(0, 85), labels = function(x) paste0(x, "%")) +
+  coord_cartesian(clip = "off") +
+  labs(x = "% with Cognitive Impairment", y = NULL,
+       title = "Figure 3. Cognitive impairment by referral pathway") +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        plot.title.position = "plot",
+        axis.text.y = element_text(size = 12, face = "bold"),
+        panel.grid.major.y = element_blank(),
+        plot.margin = margin(t = 5, r = 10, b = 15, l = 5))
 ```
 
-</div>
-</div>
+```{r enrichment-plot, fig.height=2.5, fig.width=8}
+enrich_data <- tibble(
+  group = factor(c("White NH","Hispanic","Asian NH","NH Other"),
+                 levels = rev(c("White NH","Hispanic","Asian NH","NH Other"))),
+  ratio = c(4.8, 3.8, 4.5, 4.0))
+ggplot(enrich_data, aes(x = ratio, y = group, fill = group)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_text(aes(label = paste0(ratio, "x")),
+            hjust = -0.3, size = 5.5, fontface = "bold") +
+  scale_fill_manual(values = race_colors[rev(c("White NH","Hispanic","Asian NH","NH Other"))]) +
+  scale_x_continuous(limits = c(0, 7)) +
+  labs(x = "Enrichment Ratio (ADRC Prevalence / Population Prevalence)", y = NULL,
+       title = "Figure 4. Clinical enrichment ratio by race/ethnicity") +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        plot.title.position = "plot",
+        axis.text.y = element_text(size = 12, face = "bold"),
+        panel.grid.major.y = element_blank())
+```
 
 # Conclusions & Future Directions
 
-- Estimated AD prevalence in the three-county catchment is **8.9%** overall, with the highest burden among Hispanic older adults (11.6%) and the lowest among Asian Americans (5.3%).
+- Estimated AD prevalence is **8.9%** among adults 65+ in the three-county catchment, highest among Hispanic older adults (11.6%) and lowest among Asian Americans (5.3%).
 
-- The ADRC's clinical enrichment is substantial and pervasive. ADRC data can provide valuable local race/ethnicity comparisons, but **should not be interpreted as representative of the general population** without statistical adjustment.
+- Clinical enrichment is substantial across all referral pathways. Demographic reweighting of ADRC data **does not enable estimation of population prevalence**, but under approximately constant enrichment across groups, it can support estimation of **racial and ethnic disparities** in cognitive outcomes.
 
-- **Black non-Hispanic adults are significantly underrepresented** in the ADRC (n=12 at 65+) relative to the catchment population. Expanding recruitment in this community is a priority.
+- **Black NH adults are underrepresented** in the ADRC (n=12 at 65+) relative to the catchment population. Expanding recruitment is a priority.
+
+- **Future directions:** Expand recruitment of underrepresented groups; extend to longitudinal trajectories and incident dementia; disaggregate the Asian NH category given known heterogeneity across subgroups (Mayeda et al. 2016).
 
 ### Limitations
 
-- The hybrid prevalence model assumes approximately constant clinical enrichment across racial/ethnic groups, which was tested empirically but with limited precision given subgroup sample sizes.
-- Hispanic (n=58) and NH Other (n=18) ADRC subgroup estimates carry wide uncertainty.
-- The ADRC's high proportion of Lewy body disease (~45% of ADRD) reflects Stanford's research focus.
+- The hybrid model assumes clinical enrichment is constant across racial/ethnic groups. This was tested empirically (ratios ranged from 3.8x to 4.8x) but with limited precision given subgroup sample sizes.
+- Hispanic (n=58) and NH Other (n=18) ADRC subgroups yield wide confidence intervals for race-specific estimates.
+- The ADRC's etiological composition (~45% Lewy body disease among ADRD cases) reflects Stanford's research focus and may not generalize to population-based etiological distributions.
+- Black NH participants were collapsed into the NH Other category due to small sample size (n=12), precluding separate estimation of Black-White disparities.
+- BRFSS captures only non-institutionalized adults, excluding nursing home residents among whom ADRD prevalence is substantially higher.
+- The Dhana et al. CHAP coefficients were estimated in a Chicago population; age, sex, and education associations may not transfer perfectly to the Bay Area.
+- Several covariates used in prior generalizability analyses (income, self-rated health, exercise, functional limitations) were unavailable in the NACC UDS and could not be included in the participation model.
+- Hypertension was structurally missing in BRFSS even-numbered survey years (2016, 2018, 2020, 2022), addressed via multiple imputation but representing a limitation.
 
-### Future Directions
+### References
 
-- Expand ADRC recruitment of Black and Hispanic older adults to enable adequately powered race-specific analyses.
-- Extend the generalizability framework to longitudinal cognitive trajectories and incident dementia.
-- Disaggregate the Asian NH category (e.g., Chinese, Filipino, South Asian), given known heterogeneity in dementia risk across Asian subgroups (Mayeda et al. 2016).
+1. Dhana K, et al. (2023). Estimated prevalence of Alzheimer's disease by state and county. *Alzheimer's & Dementia*, 19(S10).
+2. Matthews KA, et al. (2019). Racial and ethnic estimates of Alzheimer's disease and related dementias in the United States. *Alzheimer's & Dementia*, 15(1), 17--24.
+3. Mayeda ER, et al. (2016). Inequalities in dementia incidence between six racial and ethnic groups. *Alzheimer's & Dementia*, 12(3), 216--224.
+4. Hayes-Larson E, et al. (2022). Generalizing KHANDLE study findings on racial/ethnic differences in cognitive trajectories. *Alzheimer's & Dementia*, 18(8), 1436--1446.
+5. Dahabreh IJ, et al. (2019). Generalizing causal inferences from randomized trials. *Biometrics*, 75(2), 685--694.
 
 ### Acknowledgments
 
-This work was supported by the Stanford Alzheimer's Disease Research Center (NIA P30 AG066515).
+Supported by the Stanford Alzheimer's Disease Research Center (NIA P30 AG066515).
